@@ -1,0 +1,20 @@
+[package]
+name = "openctp_sys"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+encoding = "0.2.33"
+memchr = "2.3.3"
+simple-error = "0.3.0"
+tokio = { version = "1", features = ["full"] }
+futures = "0.3"
+log = "0.4"
+lazy_static = "1.4.0"
+
+[build-dependencies]
+bindgen = "0.69.4"
+clang = "2.0.0"
+clang-sys = { version = "1", features = ["clang_6_0", "runtime"] }
+Inflector = "0.11.4"
+lazy_static = "1.4.0"
