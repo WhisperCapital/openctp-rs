@@ -1,93 +1,49 @@
 # openctp-rs
 
+## 生成产物
 
+### API 封装器
 
-## Getting started
+api_wrapper.rs 文件为 OpenCTP 结构定义了一个 impl 块，提供了围绕本地 C API 函数的方法。这些方法为底层 C 库提供了一个安全、习以为常的 Rust 接口。它们处理的事项包括将 Rust 字符串转换为 C 字符串、确保内存安全以及将原始指针封装到 Rust 结构中。
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+### SPI 封装器
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+spi_wrapper.rs 文件定义了一组特质和结构，作为交易系统事件的监听器。 CTPListenerTrait 特征定义了各种事件的回调，如登录成功、订单更新和市场数据。实现该特性后，您的 Rust 代码就能以类型安全的方式响应这些事件。
 
-## Add your files
+CTPListenerStream 结构提供了一种使用 Rust 异步特性与 SPI 交互的方法。它实现了 Stream 特性，允许异步接收事件。这对于与 Rust 系统的其他部分集成特别有用，比如发送消息或更新状态以响应事件。
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+## 参与开发
 
+### 生成 binding.rs
+
+```sh
+cargo build
 ```
-cd existing_repo
-git remote add origin https://gitlab.git.apricottavern.site/microservice/openctp-rs.git
-git branch -M master
-git push -uf origin master
+
+这将执行 build.rs，生成 binding.rs
+
+### 更新易达相关依赖
+
+由于 C++ 目前没有方便的包管理器，需要手动将依赖的源码复制黏贴过来。
+
+1. 从 [OpenCTP 网站](http://www.openctp.cn/download.html) 下载解压 ` 	ctp_6.7.2.zip`
+1. 将得到的文件夹里的 `v6.7.2_20230913_api_traderapi_se_linux64/` 文件夹替换到本仓库的 `crates/openctp_sys/thirdparty/openctp/linux64` 里即可。
+1. `mv crates/yd_client_sys/thirdparty/ydClient/ydAPI_c++/linux64/yd.so crates/yd_client_sys/thirdparty/ydClient/ydAPI_c++/linux64/libyd.so # fix error while loading shared libraries: libyd.so: cannot open shared object file: No such file or directory`
+1. 更新相关测试，例如 `crates/yd_client_sys/tests/api_version.rs`
+
+### 运行示例
+
+```sh
+cargo test
+cargo run -p yd_client_sys --example create_yd_listener
 ```
 
-## Integrate with your tools
+### 开发容器
 
-- [ ] [Set up project integrations](https://gitlab.git.apricottavern.site/microservice/openctp-rs/-/settings/integrations)
+由于 yd 无法在 Mac 下运行，要不是使用[Linux 远程开发容器](https://questerai.feishu.cn/wiki/V9KTwpefBi5oVwkPNrfc1i4jnUb)，要不就是用 Linux 电脑。而且由于本地开发容器的 bug，需要用很慢的 osxfs (Legacy)，不能用 VirtioFS。所以还是建议用开发机。
 
-## Collaborate with your team
+用 VSCode 左下角的 >< 远程主机按钮，打开菜单选择「在容器内重新打开文件夹」。
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+#### Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?
 
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+参考 https://stackoverflow.com/a/77361735/4617295
